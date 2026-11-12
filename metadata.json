@@ -1,0 +1,6 @@
+{
+  "name": "SahneSanat - Kültür Sanat Pazaryeri",
+  "description": "Sanatçılar, müzik toplulukları ve işletmeler için profesyonel kültür-sanat hizmet, ilan, rezervasyon ve organizasyon platformu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

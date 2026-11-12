@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-canvas: #f7f6f2;
+    --card-surface: #ffffff;
+    --border-subtle: #e5e3dc;
+    --primary-accent: #0f172a;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+  }
+
+  body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+  }
+}
+
+/* Bespoke Acoustic Sound Wave & Frequency Art Pattern */
+.bg-acoustic-pattern {
+  background-color: #f7f6f2;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 60 C 20 40, 40 80, 60 60 C 80 40, 100 80, 120 60' stroke='%23d8d5cb' stroke-width='1.2' fill='none' stroke-linecap='round' opacity='0.45'/%3E%3Cpath d='M0 30 C 30 15, 60 45, 90 30 C 105 22, 115 35, 120 30' stroke='%23dedbd2' stroke-width='0.8' fill='none' opacity='0.35'/%3E%3Cpath d='M0 90 C 25 105, 50 75, 75 90 C 100 105, 110 85, 120 90' stroke='%23dedbd2' stroke-width='0.8' fill='none' opacity='0.35'/%3E%3Ccircle cx='60' cy='60' r='1.5' fill='%23c9c5ba' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+}
+
+/* Wave frequency accent card */
+.sound-wave-glow {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 249, 246, 0.95) 100%);
+  backdrop-filter: blur(8px);
+}
