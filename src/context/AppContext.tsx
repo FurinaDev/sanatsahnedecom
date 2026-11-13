@@ -16,6 +16,7 @@ import {
   Instrument,
   BusinessType,
   EventAnnouncement,
+  ArtDiscipline,
 } from '../types';
 import {
   INITIAL_USERS,
@@ -39,6 +40,8 @@ import {
 
 export interface FilterState {
   searchQuery: string;
+  discipline: ArtDiscipline | 'Tümü';
+  specialty: string;
   genre: MusicGenre | 'Tümü';
   ensembleType: EnsembleType | 'Tümü';
   instrument: Instrument | 'Tümü';
@@ -53,6 +56,8 @@ export interface FilterState {
 
 export const INITIAL_FILTERS: FilterState = {
   searchQuery: '',
+  discipline: 'Tümü',
+  specialty: 'Tümü',
   genre: 'Tümü',
   ensembleType: 'Tümü',
   instrument: 'Tümü',
@@ -83,7 +88,9 @@ export type AppView =
   | 'how_it_works'
   | 'events'
   | 'event_detail'
-  | 'contact';
+  | 'contact'
+  | 'about'
+  | 'team';
 
 interface AppContextType {
   // Settings & Navigation
@@ -145,7 +152,7 @@ interface AppContextType {
   resetAllData: () => void;
 }
 
-const STORAGE_KEY = 'sahnesanat_db_state_v1';
+const STORAGE_KEY = 'sahnesanat_db_state_v3';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -222,6 +229,120 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_EVENTS;
   });
 
+  // Resolve clean pathname <-> (AppView, entityId)
+  const resolveRouteFromPath = (
+    pathname: string
+  ): { view: AppView; entityId: string | null } => {
+    const clean = pathname.replace(/\/+$/, '') || '/';
+    if (clean === '/') return { view: 'home', entityId: null };
+    if (clean === '/ilanlar') return { view: 'listings', entityId: null };
+    if (clean.startsWith('/ilanlar/')) {
+      const param = decodeURIComponent(clean.slice('/ilanlar/'.length));
+      const matched = listings.find((l) => l.slug === param || l.id === param);
+      return { view: 'listing_detail', entityId: matched ? matched.id : param };
+    }
+    if (clean === '/sanatcilar') return { view: 'artists_directory', entityId: null };
+    if (clean.startsWith('/sanatcilar/')) {
+      const param = decodeURIComponent(clean.slice('/sanatcilar/'.length));
+      const matched = artists.find((a) => a.slug === param || a.id === param);
+      return { view: 'artist_profile', entityId: matched ? matched.id : param };
+    }
+    if (clean === '/topluluklar') return { view: 'ensembles_directory', entityId: null };
+    if (clean.startsWith('/topluluklar/')) {
+      const param = decodeURIComponent(clean.slice('/topluluklar/'.length));
+      const matched = ensembles.find((e) => e.slug === param || e.id === param);
+      return { view: 'ensemble_profile', entityId: matched ? matched.id : param };
+    }
+    if (clean === '/isletmeler') return { view: 'businesses_directory', entityId: null };
+    if (clean.startsWith('/isletmeler/')) {
+      const param = decodeURIComponent(clean.slice('/isletmeler/'.length));
+      const matched = businesses.find((b) => b.slug === param || b.id === param);
+      return { view: 'business_profile', entityId: matched ? matched.id : param };
+    }
+    if (clean === '/etkinlikler') return { view: 'events', entityId: null };
+    if (clean === '/iletisim') return { view: 'contact', entityId: null };
+    if (clean === '/hakkimizda') return { view: 'about', entityId: null };
+    if (clean === '/ekibimiz') return { view: 'team', entityId: null };
+    if (clean === '/nasil-calisir') return { view: 'how_it_works', entityId: null };
+    if (clean === '/profil-duzenle') return { view: 'profile_edit', entityId: null };
+    if (clean === '/panel/isletme') return { view: 'business_dashboard', entityId: null };
+    if (clean === '/panel/sanatci') return { view: 'artist_dashboard', entityId: null };
+    if (clean === '/panel/topluluk') return { view: 'ensemble_dashboard', entityId: null };
+    if (clean === '/panel/yonetim') return { view: 'admin_panel', entityId: null };
+    return { view: 'home', entityId: null };
+  };
+
+  const buildPathForRoute = (view: AppView, entityId?: string | null): string => {
+    switch (view) {
+      case 'home':
+        return '/';
+      case 'listings':
+        return '/ilanlar';
+      case 'listing_detail': {
+        const found = listings.find((l) => l.id === entityId || l.slug === entityId);
+        return `/ilanlar/${found?.slug || entityId || ''}`;
+      }
+      case 'artists_directory':
+        return '/sanatcilar';
+      case 'artist_profile': {
+        const found = artists.find((a) => a.id === entityId || a.slug === entityId);
+        return `/sanatcilar/${found?.slug || entityId || 'artist_efe_ozkan'}`;
+      }
+      case 'ensembles_directory':
+        return '/topluluklar';
+      case 'ensemble_profile': {
+        const found = ensembles.find((e) => e.id === entityId || e.slug === entityId);
+        return `/topluluklar/${found?.slug || entityId || 'ensemble_istanbul_string_trio'}`;
+      }
+      case 'businesses_directory':
+        return '/isletmeler';
+      case 'business_profile': {
+        const found = businesses.find((b) => b.id === entityId || b.slug === entityId);
+        return `/isletmeler/${found?.slug || entityId || 'biz_grand_bosphorus'}`;
+      }
+      case 'events':
+      case 'event_detail':
+        return '/etkinlikler';
+      case 'contact':
+        return '/iletisim';
+      case 'about':
+        return '/hakkimizda';
+      case 'team':
+        return '/ekibimiz';
+      case 'how_it_works':
+        return '/nasil-calisir';
+      case 'profile_edit':
+        return '/profil-duzenle';
+      case 'business_dashboard':
+        return '/panel/isletme';
+      case 'artist_dashboard':
+        return '/panel/sanatci';
+      case 'ensemble_dashboard':
+        return '/panel/topluluk';
+      case 'admin_panel':
+        return '/panel/yonetim';
+      default:
+        return '/';
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const initial = resolveRouteFromPath(window.location.pathname);
+    if (initial.view !== 'home') {
+      setActiveView(initial.view);
+      setSelectedEntityId(initial.entityId);
+    }
+
+    const handlePopState = () => {
+      const next = resolveRouteFromPath(window.location.pathname);
+      setActiveView(next.view);
+      setSelectedEntityId(next.entityId);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Save to localStorage on changes
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_settings`, JSON.stringify(settings));
@@ -254,6 +375,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveView(view);
     if (entityId) {
       setSelectedEntityId(entityId);
+    } else if (!['listing_detail', 'artist_profile', 'ensemble_profile', 'business_profile'].includes(view)) {
+      setSelectedEntityId(null);
+    }
+    if (typeof window !== 'undefined') {
+      const nextPath = buildPathForRoute(view, entityId ?? null);
+      if (window.location.pathname !== nextPath) {
+        window.history.pushState({}, '', nextPath);
+      }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -785,7 +914,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       firstName: email.split('@')[0],
       lastName: '',
       phone: '+90 532 000 00 00',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      avatarUrl: '/src/assets/images/artist_guitar_vocalist_1794582675464.jpg',
       roles: ['artist'],
       activeRole: 'artist',
       isVerified: true,
@@ -809,7 +938,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       firstName,
       lastName,
       phone: data.phone || '+90 532 000 00 00',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      avatarUrl: '/src/assets/images/artist_guitar_vocalist_1794582675464.jpg',
       roles: [data.role],
       activeRole: data.role,
       isVerified: false,

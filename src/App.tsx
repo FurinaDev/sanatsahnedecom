@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { MotionConfig, motion } from 'motion/react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
@@ -9,6 +10,8 @@ import { EnsemblesDirectoryView } from './components/EnsemblesDirectoryView';
 import { BusinessesDirectoryView } from './components/BusinessesDirectoryView';
 import { EventsView } from './components/EventsView';
 import { ContactView } from './components/ContactView';
+import { AboutView } from './components/AboutView';
+import { TeamView } from './components/TeamView';
 import { ArtistProfileView } from './components/ArtistProfileView';
 import { EnsembleProfileView } from './components/EnsembleProfileView';
 import { BusinessProfileView } from './components/BusinessProfileView';
@@ -22,16 +25,11 @@ import { AuthModal } from './components/AuthModal';
 import { RecommendationsStrip } from './components/RecommendationsStrip';
 import { Footer } from './components/Footer';
 import {
-  ShieldCheck,
   ArrowRight,
-  Star,
-  Users,
   Building2,
-  Calendar,
-  AlertTriangle,
-  CalendarPlus,
-  Clock,
   MapPin,
+  AlertTriangle,
+  Calendar,
 } from 'lucide-react';
 import { formatCurrencyTRY } from './utils/businessLogic';
 
@@ -41,12 +39,72 @@ const AppContent: React.FC = () => {
     selectedEntityId,
     navigateTo,
     listings,
-    artists,
-    ensembles,
-    events,
+    setAuthModalMode,
+    switchRole,
+    isAuthenticated,
   } = useApp();
 
-  // Render subviews
+  const [audienceTab, setAudienceTab] = useState<'artist' | 'venue'>('artist');
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [activeView, selectedEntityId]);
+
+  const journeySteps =
+    audienceTab === 'artist'
+      ? [
+          {
+            num: '01',
+            title: 'Profil & Repertuvar Oluştur',
+            desc: 'Eğitim geçmişinizi, uzmanlık alanınızı, sahne kayıtlarınızı ve repertuvarınızı doğrulamalı sanatçı dosyanızda sergileyin.',
+          },
+          {
+            num: '02',
+            title: 'Sabit Bütçeli İlanlara Başvur',
+            desc: 'Otellerin, kültür vakıflarının ve etkinlik salonlarının açık bütçeli sahne ilanlarını inceleyip doğrudan teklifinizi gönderin.',
+          },
+          {
+            num: '03',
+            title: 'Güvenli Sözleşme ve Garanti Ödeme',
+            desc: 'Seçildiğinizde karşılıklı sözleşmeyi onaylayın; performans sonrası hakedişiniz platform güvencesiyle doğrudan hesabınıza geçsin.',
+          },
+        ]
+      : [
+          {
+            num: '01',
+            title: 'Doğrulanmış İlan Yayınla',
+            desc: 'Etkinlik tarihi, kadro formatı, teknik donanım ve sabit bütçeyi tanımlayarak seçkin sanatçı ağına çağrı açın.',
+          },
+          {
+            num: '02',
+            title: 'Ses Örneklerini ve Sicili İncele',
+            desc: 'Başvuran sanatçı ve toplulukların canlı kayıtlarını dinleyin, iptal oranlarını ve mekân değerlendirmelerini kıyaslayın.',
+          },
+          {
+            num: '03',
+            title: 'Tek Tıkla Anlaş & Sahneye Çıkar',
+            desc: 'Dijital sözleşme ve acil ikame ağı güvencesiyle etkinliğinizin eksiksiz ve tam saatinde gerçekleşmesini garanti altına alın.',
+          },
+        ];
+
+  const handleJoinAsArtist = () => {
+    if (isAuthenticated) {
+      switchRole('artist');
+      navigateTo('profile_edit');
+    } else {
+      setAuthModalMode('register');
+    }
+  };
+
+  const handleJoinAsVenue = () => {
+    if (isAuthenticated) {
+      switchRole('business_owner');
+      navigateTo('business_dashboard');
+    } else {
+      setAuthModalMode('register');
+    }
+  };
+
   const renderView = () => {
     switch (activeView) {
       case 'listings':
@@ -123,254 +181,248 @@ const AppContent: React.FC = () => {
       case 'how_it_works':
         return <HowItWorksView />;
 
+      case 'about':
+        return <AboutView />;
+
+      case 'team':
+        return <TeamView />;
+
       case 'home':
       default:
         return (
-          <div className="space-y-8 text-left">
-            {/* Clean Boxed Culture Hero */}
+          <div className="text-left">
+            {/* Section 1: Architectural Hero with Interactive Search & Stats */}
             <HeroSection />
 
-            {/* Weekly & Monthly Recommendations */}
+            {/* Section 2: #ilanlar — Live Performance & Stage Listings */}
+            <section
+              id="ilanlar"
+              className="py-14 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800 transition-colors"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                  <div>
+                    <span className="label-caps text-[#E45424]">
+                      Öne Çıkan Fırsatlar
+                    </span>
+                    <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">
+                      Güncel Sahne &amp; Performans İlanları
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Müzikten görsel sanatlara, sahne performanslarından edebiyata tüm kültür-sanat disiplinleri ve etkinlik alanları için güncel açık çağrılar ve proje fırsatları.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('listings')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#E45424] hover:text-[#c94317] transition-colors self-start sm:self-auto cursor-pointer whitespace-nowrap"
+                  >
+                    <span>Tüm İlanları Gör ({listings.length})</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {listings.slice(0, 3).map((l) => {
+                    const isUrgent = Boolean(l.isReplacement);
+                    return (
+                      <article
+                        key={l.id}
+                        onClick={() => navigateTo('listing_detail', l.id)}
+                        className={`group rounded-2xl p-5 border transition-transform duration-200 hover:-translate-y-0.5 cursor-pointer flex flex-col justify-between space-y-4 shadow-xs hover:shadow-md ${
+                          isUrgent
+                            ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700/60 hover:border-[#E45424]'
+                            : 'bg-white dark:bg-[#111A2E] border-slate-200 dark:border-slate-800 hover:border-[#E45424]/70'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          {/* Top Venue Info & Status */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200/70 dark:border-orange-500/20 flex items-center justify-center text-[#E45424] shrink-0">
+                                <Building2 className="w-5 h-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                  {l.businessName}
+                                </div>
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                  <MapPin className="w-3 h-3 shrink-0" />
+                                  <span>{l.city}, {l.district}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {isUrgent ? (
+                              <span className="inline-flex items-center gap-1 text-amber-800 dark:text-amber-300 text-[11px] font-bold shrink-0">
+                                <AlertTriangle className="w-3.5 h-3.5 text-[#E45424]" />
+                                <span>Acil Çağrı</span>
+                              </span>
+                            ) : (
+                              <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold shrink-0">
+                                Aktif İlan
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Title & Excerpt */}
+                          <div>
+                            <h3 className="font-display font-bold text-base text-slate-900 dark:text-white group-hover:text-[#E45424] transition-colors line-clamp-2">
+                              {l.title}
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1.5 leading-relaxed">
+                              {l.description}
+                            </p>
+                          </div>
+
+                          {/* Unboxed Editorial Metadata */}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300 tabular-nums">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                              {l.targetEnsembleType}
+                            </span>
+                            <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
+                            <span className="inline-flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-[#E45424]" />
+                              <span>{l.eventDate}</span>
+                            </span>
+                            {l.genres[0] && (
+                              <>
+                                <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
+                                <span className="text-[#E45424] font-medium">{l.genres[0]}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Bottom Budget & CTA */}
+                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                              Net Hakediş
+                            </div>
+                            <div className="font-sans text-lg font-extrabold text-slate-900 dark:text-white tabular-nums">
+                              {formatCurrencyTRY(l.budgetAmount)}
+                            </div>
+                          </div>
+
+                          <span className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#1E2B4F] dark:bg-[#E45424] group-hover:bg-[#E45424] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span>Başvur</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {/* Section 3: #sanatcilar — 4-Column Talent & Ensemble Grid */}
             <RecommendationsStrip />
 
-            {/* Featured Active Listings Section */}
-            <section className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-amber-700">
-                    Öne Çıkan Fırsatlar
+            {/* Section 4: #nasil-calisir — How It Works + Bottom CTA Banner */}
+            <section
+              id="nasil-calisir"
+              className="py-14 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 transition-colors"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                {/* Header + Audience Tab Switcher */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
+                  <div>
+                    <span className="label-caps text-[#E45424]">
+                      Şeffaf ve Güvenilir Süreç
+                    </span>
+                    <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">
+                      Sahne Yolculuğu Nasıl İşler?
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Hem icracılar hem de etkinlik düzenleyen işletmeler için üç adımda güvenli iş akışı.
+                    </p>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 mt-1">
-                    Güncel Sahne ve Etkinlik İlanları
-                  </h2>
+
+                  {/* Segmented Audience Tabs */}
+                  <div className="inline-flex p-1 rounded-xl bg-white dark:bg-[#111A2E] border border-slate-200 dark:border-slate-800 shadow-xs self-start md:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setAudienceTab('artist')}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                        audienceTab === 'artist'
+                          ? 'bg-[#E45424] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      Sanatçılar İçin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAudienceTab('venue')}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                        audienceTab === 'venue'
+                          ? 'bg-[#E45424] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      İşletmeler İçin
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => navigateTo('listings')}
-                  className="text-xs font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1.5 self-start sm:self-auto transition-colors"
-                >
-                  <span>Tüm İlanları Keşfet ({listings.length})</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {listings.slice(0, 3).map((l) => (
-                  <div
-                    key={l.id}
-                    onClick={() => navigateTo('listing_detail', l.id)}
-                    className="p-5 bg-white rounded-2xl border border-stone-200/90 hover:border-amber-600/50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between space-y-4 shadow-xs"
-                  >
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-stone-500">{l.businessName}</span>
-                        {l.isReplacement && (
-                          <span className="text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md uppercase">
-                            Acil İkame
-                          </span>
-                        )}
+                {/* 3 Numbered Journey Step Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {journeySteps.map((step) => (
+                    <div
+                      key={step.num}
+                      className="bg-white dark:bg-[#111A2E] rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-[#E45424]/50 transition-colors"
+                    >
+                      <div className="w-11 h-11 rounded-xl bg-[#E45424]/10 dark:bg-[#E45424]/20 text-[#E45424] font-display font-extrabold text-base flex items-center justify-center mb-4 tabular-nums">
+                        {step.num}
                       </div>
-
-                      <h3 className="text-base font-bold text-stone-900 line-clamp-2 hover:text-amber-700 transition-colors">
-                        {l.title}
+                      <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-2">
+                        {step.title}
                       </h3>
-
-                      <div className="text-xs text-stone-500">
-                        {l.targetEnsembleType} · {l.city}
-                      </div>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {step.desc}
+                      </p>
                     </div>
-
-                    <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
-                      <div>
-                        <div className="text-[10px] text-stone-400">Net Hakediş</div>
-                        <div className="text-base font-bold text-stone-900 tabular-nums">
-                          {formatCurrencyTRY(l.budgetAmount)}
-                        </div>
-                      </div>
-                      <span className="text-xs font-semibold text-amber-700 flex items-center gap-1">
-                        İlanı Aç <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Featured Artists & Ensembles Section */}
-            <section className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-amber-700">
-                    Kültür & Sanat Topluluğu
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 mt-1">
-                    Doğrulanmış Sanatçılar ve Müzik Grupları
-                  </h2>
-                </div>
-                <div className="flex items-center gap-3 text-xs font-semibold">
-                  <button
-                    onClick={() => navigateTo('artists_directory')}
-                    className="text-amber-700 hover:text-amber-900 flex items-center gap-1"
-                  >
-                    Tüm Sanatçılar <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-stone-300">·</span>
-                  <button
-                    onClick={() => navigateTo('ensembles_directory')}
-                    className="text-amber-700 hover:text-amber-900 flex items-center gap-1"
-                  >
-                    Tüm Topluluklar <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {/* Artist Card 1 */}
-                <div
-                  onClick={() => navigateTo('artist_profile', 'artist_efe_ozkan')}
-                  className="p-5 bg-white rounded-2xl border border-stone-200/90 hover:border-amber-600/50 hover:shadow-md transition-all cursor-pointer space-y-3.5 shadow-xs"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <img
-                      src={artists[0]?.avatarUrl}
-                      alt={artists[0]?.fullName}
-                      referrerPolicy="no-referrer"
-                      className="w-14 h-14 rounded-xl object-cover border border-stone-200"
-                    />
-                    <div>
-                      <div className="flex items-center gap-1 font-bold text-stone-900 text-sm">
-                        <span>{artists[0]?.fullName}</span>
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      </div>
-                      <div className="text-xs text-amber-700 font-medium">{artists[0]?.title}</div>
-                      <div className="text-[11px] text-stone-400">{artists[0]?.city}</div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-stone-600 line-clamp-2">{artists[0]?.bioShort}</p>
-                  <div className="flex items-center justify-between text-xs pt-2.5 border-t border-stone-100 text-stone-500">
-                    <span className="flex items-center gap-1 text-amber-600 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-500" />
-                      {artists[0]?.ratingAvg.toFixed(2)}
-                    </span>
-                    <span>%{artists[0]?.cancellationRate} İptal Oranı</span>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Ensemble Card */}
-                <div
-                  onClick={() => navigateTo('ensemble_profile', 'ensemble_istanbul_string_trio')}
-                  className="p-5 bg-white rounded-2xl border border-stone-200/90 hover:border-amber-600/50 hover:shadow-md transition-all cursor-pointer space-y-3.5 shadow-xs"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <img
-                      src={ensembles[0]?.avatarUrl}
-                      alt={ensembles[0]?.name}
-                      referrerPolicy="no-referrer"
-                      className="w-14 h-14 rounded-xl object-cover border border-stone-200"
-                    />
-                    <div>
-                      <div className="flex items-center gap-1 font-bold text-stone-900 text-sm">
-                        <span>{ensembles[0]?.name}</span>
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                {/* Bottom Navy CTA Banner */}
+                <div className="rounded-3xl bg-gradient-to-br from-[#1E2B4F] via-[#151F3B] to-[#0B1120] border border-slate-800 p-7 sm:p-10 lg:p-12 text-white shadow-lg">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="space-y-2.5 max-w-2xl">
+                      <div className="label-caps text-orange-300">
+                        Türkiye Geneli Seçkin Kültür Ağı
                       </div>
-                      <div className="text-xs text-amber-700 font-medium">
-                        {ensembles[0]?.ensembleType} (3 Müzisyen)
-                      </div>
-                      <div className="text-[11px] text-stone-400">{ensembles[0]?.city}</div>
+                      <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                        Sanatınızı Doğru Sahnelerle Buluşturmaya Hazır mısınız?
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        Doğrulanmış profilinizle Türkiye genelindeki prestijli otel, galeri, kültür merkezi ve kurumsal etkinlik ağının parçası olun.
+                      </p>
                     </div>
-                  </div>
-                  <p className="text-xs text-stone-600 line-clamp-2">{ensembles[0]?.bio}</p>
-                  <div className="flex items-center justify-between text-xs pt-2.5 border-t border-stone-100 text-stone-500">
-                    <span className="flex items-center gap-1 text-amber-600 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-500" />
-                      {ensembles[0]?.ratingAvg.toFixed(2)}
-                    </span>
-                    <span>%{ensembles[0]?.cancellationRate} İptal Oranı</span>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleJoinAsArtist}
+                        className="px-5 py-3 rounded-xl bg-[#E45424] hover:bg-[#c94317] text-white font-bold text-xs sm:text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                      >
+                        <span>Sanatçı Olarak Katıl</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleJoinAsVenue}
+                        className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs sm:text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                      >
+                        <Building2 className="w-4 h-4" />
+                        <span>Mekan Hesabı Aç</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Artist Card 2 */}
-                <div
-                  onClick={() => navigateTo('artist_profile', 'artist_selin_arslan')}
-                  className="p-5 bg-white rounded-2xl border border-stone-200/90 hover:border-amber-600/50 hover:shadow-md transition-all cursor-pointer space-y-3.5 shadow-xs"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <img
-                      src={artists[1]?.avatarUrl}
-                      alt={artists[1]?.fullName}
-                      referrerPolicy="no-referrer"
-                      className="w-14 h-14 rounded-xl object-cover border border-stone-200"
-                    />
-                    <div>
-                      <div className="flex items-center gap-1 font-bold text-stone-900 text-sm">
-                        <span>{artists[1]?.fullName}</span>
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      </div>
-                      <div className="text-xs text-amber-700 font-medium">{artists[1]?.title}</div>
-                      <div className="text-[11px] text-stone-400">{artists[1]?.city}</div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-stone-600 line-clamp-2">{artists[1]?.bioShort}</p>
-                  <div className="flex items-center justify-between text-xs pt-2.5 border-t border-stone-100 text-stone-500">
-                    <span className="flex items-center gap-1 text-amber-600 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-500" />
-                      {artists[1]?.ratingAvg.toFixed(2)}
-                    </span>
-                    <span>%{artists[1]?.cancellationRate} İptal Oranı</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Upcoming Cultural Agenda Preview Strip */}
-            <section className="p-6 sm:p-8 bg-white rounded-2xl border border-stone-200/90 shadow-xs space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-amber-700">
-                    Ajanda
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-stone-900 mt-0.5">
-                    Yaklaşan Konser ve Dinletiler
-                  </h3>
-                </div>
-                <button
-                  onClick={() => navigateTo('events')}
-                  className="text-xs font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1 self-start sm:self-auto"
-                >
-                  <span>Tüm Etkinlik Ajandası ({events.length})</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {events.slice(0, 2).map((evt) => (
-                  <div
-                    key={evt.id}
-                    className="p-4 rounded-xl bg-stone-50 border border-stone-200/80 flex items-start gap-4"
-                  >
-                    <div className="w-16 h-16 rounded-xl bg-stone-900 overflow-hidden shrink-0">
-                      <img
-                        src={evt.posterUrl}
-                        alt={evt.title}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <div className="flex items-center gap-2 text-[11px] text-amber-800 font-semibold">
-                        <Calendar className="w-3 h-3" />
-                        <span>{evt.eventDate} ({evt.startTime})</span>
-                        <span className="text-stone-300">·</span>
-                        <span className="text-stone-500">{evt.city}</span>
-                      </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-stone-900 truncate">
-                        {evt.title}
-                      </h4>
-                      <div className="text-xs text-stone-500 truncate">
-                        {evt.venueName} · <span className="text-stone-700">{evt.performers}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </section>
           </div>
@@ -378,24 +430,44 @@ const AppContent: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-acoustic-pattern text-[#191919] font-sans antialiased flex flex-col justify-between">
-      {/* Centered Navigation Container (Exact same width & padding as main content) */}
-      <header className="sticky top-0 z-40 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-1">
-        <Navbar />
-      </header>
+  const isFullBleedView =
+    activeView === 'home' ||
+    activeView === 'listings' ||
+    activeView === 'artists_directory' ||
+    activeView === 'ensembles_directory' ||
+    activeView === 'businesses_directory' ||
+    activeView === 'events' ||
+    activeView === 'about' ||
+    activeView === 'team';
 
-      {/* Boxed Centered Content Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {renderView()}
+  return (
+    <div className="min-h-screen bg-[#F9FAFC] dark:bg-[#0B1120] text-slate-800 dark:text-slate-100 font-body antialiased flex flex-col justify-between transition-colors">
+      {/* Sticky Header */}
+      <Navbar />
+
+      {/* Main Content with Zero-Delay Instant Spring Entry */}
+      <main className="flex-1 w-full">
+        <motion.div
+          key={`${activeView}-${selectedEntityId || ''}`}
+          initial={{ opacity: 0.72, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.65 }}
+          className="w-full"
+        >
+          {isFullBleedView ? (
+            renderView()
+          ) : (
+            <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+              {renderView()}
+            </div>
+          )}
+        </motion.div>
       </main>
 
-      {/* Centered Boxed Footer Container */}
-      <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <Footer />
-      </div>
+      {/* Footer */}
+      <Footer />
 
-      {/* Real Auth Modal for Login, Register & Forgot Password */}
+      {/* Auth Modal */}
       <AuthModal />
     </div>
   );
@@ -403,8 +475,10 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <MotionConfig reducedMotion="user">
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </MotionConfig>
   );
 }

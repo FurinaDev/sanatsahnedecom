@@ -4,6 +4,14 @@
 
 export type RoleType = 'artist' | 'ensemble_leader' | 'business_owner' | 'admin';
 
+export type ArtDiscipline =
+  | 'Müzik'
+  | 'Görsel Sanatlar & Sergi'
+  | 'Heykel & Enstalasyon'
+  | 'Sahne & Tiyatro'
+  | 'Edebiyat & Söyleşi'
+  | 'Bileşik Sanatlar';
+
 export type MusicGenre =
   | 'Klasik Müzik'
   | 'Caz Müzik'
@@ -25,6 +33,8 @@ export type EnsembleType =
   | 'Orkestra'
   | 'Koro'
   | 'Büyük Topluluk'
+  | 'Sanat Kolektifi'
+  | 'Tiyatro & Performans Ekibi'
   | 'Diğer';
 
 export type Instrument =
@@ -62,6 +72,8 @@ export type BusinessType =
   | 'Üniversite ve Eğitim Kurumu'
   | 'Kültür Merkezi'
   | 'Konser Salonu'
+  | 'Sanat Galerisi & Müze'
+  | 'Edebiyat & Sahne Evi'
   | 'Özel Şirket / Kurumsal'
   | 'Bireysel İşveren';
 
@@ -87,6 +99,8 @@ export interface IndividualProfile {
   fullName: string;
   stageName?: string;
   title: string;
+  discipline?: ArtDiscipline;
+  specialtyTags?: string[];
   bioShort: string;
   bioLong: string;
   city: string;
@@ -135,6 +149,8 @@ export interface Ensemble {
   leaderUserId: string;
   name: string;
   slug: string;
+  discipline?: ArtDiscipline;
+  specialtyTags?: string[];
   ensembleType: EnsembleType;
   bio: string;
   foundedYear: number;
@@ -164,6 +180,8 @@ export interface BusinessProfile {
   businessName: string;
   slug: string;
   businessType: BusinessType;
+  disciplines?: ArtDiscipline[];
+  facilities?: string[];
   description: string;
   city: string;
   district: string;
@@ -201,7 +219,9 @@ export interface Listing {
   title: string;
   slug: string;
   description: string;
-  eventType: string; // e.g. "Lobi Konseri", "Gala Gecesi", "Bahar Festivali"
+  discipline?: ArtDiscipline;
+  specialtyTags?: string[];
+  eventType: string; // e.g. "Lobi Konseri", "Gala Gecesi", "Sergi Açılışı"
   genres: MusicGenre[];
   targetEnsembleType: EnsembleType;
   requiredInstruments: Instrument[];
@@ -366,6 +386,7 @@ export interface PlatformSettings {
 export interface EventAnnouncement {
   id: string;
   title: string;
+  discipline?: ArtDiscipline;
   category: EventCategory;
   organizerName: string;
   organizerContact?: string;

@@ -1,125 +1,259 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { motion } from 'motion/react';
 import { useApp } from '../context/AppContext';
-import { Music, Building2, Search, ArrowRight, Star } from 'lucide-react';
+import { ArtDiscipline } from '../types';
+import { ART_DISCIPLINES, CITY_LIST } from '../utils/disciplineConfig';
+import { CustomSelect } from './ui/CustomSelect';
+import { AnimatedCounter } from './ui/AnimatedCounter';
+import { computePlatformStats } from '../utils/platformStats';
+import {
+  Compass,
+  MapPin,
+  Palette,
+  Search,
+} from 'lucide-react';
+
+interface QuickTopic {
+  label: string;
+  discipline: ArtDiscipline | 'Tümü';
+  query: string;
+}
+
+const QUICK_TOPICS: QuickTopic[] = [
+  { label: 'Klasik & Oda Müziği', discipline: 'Müzik', query: '' },
+  { label: 'Heykel & Enstalasyon', discipline: 'Heykel & Enstalasyon', query: '' },
+  { label: 'Görsel Sanatlar & Sergi', discipline: 'Görsel Sanatlar & Sergi', query: '' },
+  { label: 'Edebiyat & Söyleşi', discipline: 'Edebiyat & Söyleşi', query: '' },
+  { label: 'Bileşik Sanatlar', discipline: 'Bileşik Sanatlar', query: '' },
+  { label: 'Caz & Akustik', discipline: 'Müzik', query: 'Caz' },
+];
 
 export const HeroSection: React.FC = () => {
-  const { navigateTo, switchRole, setFilters, listings, artists, events } = useApp();
+  const { navigateTo, setFilters, listings, artists, ensembles, businesses, events, reviews } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCity, setSelectedCity] = useState('Tümü');
+  const [selectedDiscipline, setSelectedDiscipline] = useState<ArtDiscipline | 'Tümü'>('Tümü');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      setFilters((prev) => ({ ...prev, searchQuery: searchTerm }));
-    }
+    setFilters((prev) => ({
+      ...prev,
+      searchQuery: searchTerm.trim(),
+      city: selectedCity,
+      discipline: selectedDiscipline,
+      specialty: 'Tümü',
+      genre: 'Tümü',
+      ensembleType: 'Tümü',
+      instrument: 'Tümü',
+    }));
     navigateTo('listings');
   };
 
-  const quickPills = [
-    { label: 'Yaylı Trio', genre: 'Oda Müziği' },
-    { label: 'Piyano Resitali', genre: 'Klasik Müzik' },
-    { label: 'Akustik Caz', genre: 'Caz Müzik' },
-    { label: 'Nefesli Topluluğu', genre: 'Klasik Müzik' },
-  ];
+  const handleQuickSearch = (topic: QuickTopic) => {
+    setFilters((prev) => ({
+      ...prev,
+      searchQuery: topic.query,
+      city: 'Tümü',
+      discipline: topic.discipline,
+      specialty: 'Tümü',
+      genre: 'Tümü',
+      ensembleType: 'Tümü',
+      instrument: 'Tümü',
+    }));
+    navigateTo('listings');
+  };
+
+  const CITY_OPTIONS = CITY_LIST.map((city) => ({
+    value: city,
+    label: city === 'Tümü' ? 'Tüm Şehirler' : city,
+  }));
+
+  const DISCIPLINE_OPTIONS = ART_DISCIPLINES.map((discipline) => ({
+    value: discipline,
+    label: discipline === 'Tümü' ? 'Tüm Sanat Türleri' : discipline,
+  }));
+
+  const stats = useMemo(
+    () =>
+      computePlatformStats({
+        artists,
+        ensembles,
+        businesses,
+        listings,
+        events,
+        reviews,
+      }),
+    [artists, ensembles, businesses, listings, events, reviews]
+  );
 
   return (
-    <section className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 text-stone-900 shadow-xs">
-      <div className="max-w-2xl mx-auto text-center space-y-4">
-        {/* Crisp Headline */}
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 leading-tight">
-          Sanatçı, Topluluk ve Mekân Buluşması
-        </h1>
+    <section className="relative pt-12 pb-14 lg:pt-16 lg:pb-18 overflow-hidden geo-grid border-b border-slate-200 dark:border-slate-800 bg-[#F9FAFC] dark:bg-[#0B1120] transition-colors">
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        {/* Display Headline */}
+        <motion.h1
+          initial={{ opacity: 0.7, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+          className="font-hero text-[1.7rem] sm:text-5xl lg:text-[3.35rem] font-semibold tracking-tight text-slate-900 dark:text-white leading-[1.15] mb-8 text-balance"
+        >
+          Her <span className="text-[#E45424] font-bold">Sanat</span>
+          <br />
+          Bir <span className="text-[#E45424] font-bold">Sahneyi</span> Hak Eder.
+        </motion.h1>
 
-        {/* Short Subtitle */}
-        <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-lg mx-auto">
-          Mekânlar ve etkinlikler için canlı müzik ilanları; sanatçılar için şeffaf hakediş ve güvenli organizasyon.
-        </p>
+        {/* Multidisciplinary Search Console */}
+        <motion.div
+          initial={{ opacity: 0.75, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+          className="max-w-4xl mx-auto bg-white dark:bg-[#111A2E] p-3 sm:p-4 rounded-2xl shadow-lg shadow-slate-900/6 dark:shadow-black/40 border border-slate-200 dark:border-slate-800"
+        >
+          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 text-left">
+            <div className="sm:col-span-2 lg:col-span-4 p-2.5 sm:px-3 bg-slate-50 dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-800 focus-within:border-[#E45424] transition-colors">
+              <label className="block text-[10px] font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 mb-0.5">
+                Ne Arıyorsunuz?
+              </label>
+              <div className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-[#E45424] shrink-0" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Heykel, Caz Trio, Sergi, Tiyatro..."
+                  aria-label="Ne Arıyorsunuz?"
+                  className="w-full bg-transparent border-0 p-0 text-xs font-medium text-slate-800 dark:text-white focus:outline-hidden placeholder:text-slate-400"
+                />
+              </div>
+            </div>
 
-        {/* Search Bar - Button says strictly "Ara" */}
-        <div className="pt-1 max-w-lg mx-auto">
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center">
-            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Enstrüman, tür veya topluluk ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-20 py-2.5 text-xs sm:text-sm bg-stone-50 border border-stone-200 focus:bg-white text-stone-900 placeholder-stone-400 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-stone-900 transition-all"
-            />
+            <div className="lg:col-span-3 p-2.5 sm:px-3 bg-slate-50 dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-800 focus-within:border-[#E45424] transition-colors">
+              <label className="block text-[10px] font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 mb-0.5">
+                Şehir / Lokasyon
+              </label>
+              <CustomSelect
+                variant="ghost"
+                ariaLabel="Şehir / Lokasyon"
+                value={selectedCity}
+                onChange={setSelectedCity}
+                options={CITY_OPTIONS}
+                icon={<MapPin className="w-4 h-4 text-[#E45424]" />}
+              />
+            </div>
+
+            <div className="lg:col-span-3 p-2.5 sm:px-3 bg-slate-50 dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-800 focus-within:border-[#E45424] transition-colors">
+              <label className="block text-[10px] font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 mb-0.5">
+                Tür
+              </label>
+              <CustomSelect
+                variant="ghost"
+                ariaLabel="Sanat Türü"
+                value={selectedDiscipline}
+                onChange={(val) => setSelectedDiscipline(val as ArtDiscipline | 'Tümü')}
+                options={DISCIPLINE_OPTIONS}
+                icon={<Palette className="w-4 h-4 text-[#E45424]" />}
+              />
+            </div>
+
             <button
               type="submit"
-              className="absolute right-1 px-4 py-1.5 text-xs font-bold text-white bg-stone-900 hover:bg-stone-800 rounded-lg transition-colors"
+              className="sm:col-span-2 lg:col-span-2 bg-[#E45424] hover:bg-[#c94317] text-white font-bold p-3 sm:p-2.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95 text-sm cursor-pointer"
             >
-              Ara
+              <Search className="w-4 h-4" />
+              <span>Ara</span>
             </button>
           </form>
 
-          {/* Quick Filter Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2 text-[11px] text-stone-500">
-            <span className="font-medium text-stone-400">Hızlı Arama:</span>
-            {quickPills.map((pill) => (
-              <button
-                key={pill.label}
-                type="button"
-                onClick={() => {
-                  setFilters((prev) => ({ ...prev, searchQuery: pill.label }));
-                  navigateTo('listings');
-                }}
-                className="px-2.5 py-0.5 rounded-md bg-stone-100 hover:bg-stone-200 text-stone-700 transition-colors font-medium"
-              >
-                {pill.label}
-              </button>
+          {/* Editorial Quick Search Links (Multidisciplinary, Zero-Pill) */}
+          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1.5 text-xs">
+            <span className="text-slate-400 dark:text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
+              Hızlı arama:
+            </span>
+            {QUICK_TOPICS.map((topic, idx) => (
+              <React.Fragment key={topic.label}>
+                {idx > 0 && (
+                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 select-none">
+                    ·
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleQuickSearch(topic)}
+                  className="text-slate-600 dark:text-slate-300 hover:text-[#E45424] dark:hover:text-[#E45424] transition-colors text-[11px] font-medium cursor-pointer underline-offset-4 hover:underline"
+                >
+                  {topic.label}
+                </button>
+              </React.Fragment>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Action Buttons */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+        {/* 5-Column Live Counter Stats Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-10 max-w-4xl mx-auto pt-6 border-t border-slate-200/80 dark:border-slate-800/80 tabular-nums">
           <button
-            onClick={() => {
-              switchRole('business_owner');
-              navigateTo('business_dashboard');
-            }}
-            className="w-full sm:w-auto px-5 py-2 text-xs font-bold text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-colors shadow-2xs flex items-center justify-center gap-1.5"
+            type="button"
+            onClick={() => navigateTo('artists_directory')}
+            className="text-center group cursor-pointer rounded-xl py-1 transition-colors"
           >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>Hizmet Arıyorum</span>
-            <span className="text-[11px] text-stone-300 font-normal">(Mekânlar)</span>
-            <ArrowRight className="w-3 h-3 ml-0.5" />
+            <div className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white group-hover:text-[#E45424] transition-colors">
+              <AnimatedCounter value={stats.artistCount} />
+              <span className="text-[#E45424]">+</span>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              Sanatçı
+            </div>
           </button>
 
           <button
-            onClick={() => {
-              switchRole('artist');
-              navigateTo('listings');
-            }}
-            className="w-full sm:w-auto px-5 py-2 text-xs font-bold text-stone-800 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors border border-stone-200 flex items-center justify-center gap-1.5"
+            type="button"
+            onClick={() => navigateTo('businesses_directory')}
+            className="text-center group cursor-pointer rounded-xl py-1 transition-colors"
           >
-            <Music className="w-3.5 h-3.5 text-stone-700" />
-            <span>Hizmet Veriyorum</span>
-            <span className="text-[11px] text-stone-500 font-normal">(Sanatçılar)</span>
+            <div className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white group-hover:text-[#E45424] transition-colors">
+              <AnimatedCounter value={stats.businessCount} />
+              <span className="text-[#E45424]">+</span>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              İşletme
+            </div>
           </button>
-        </div>
 
-        {/* Compact Metrics Row */}
-        <div className="pt-4 mt-2 border-t border-stone-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-left">
-          <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100">
-            <div className="text-[10px] text-stone-500 font-medium">Aktif İlan</div>
-            <div className="text-base font-bold text-stone-900">{listings.length} Açık Çağrı</div>
-          </div>
-          <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100">
-            <div className="text-[10px] text-stone-500 font-medium">Kayıtlı Sanatçı</div>
-            <div className="text-base font-bold text-stone-900">{artists.length}+ İcracı</div>
-          </div>
-          <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100">
-            <div className="text-[10px] text-stone-500 font-medium">Yaklaşan Etkinlik</div>
-            <div className="text-base font-bold text-stone-900">{events.length} Konser</div>
-          </div>
-          <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100">
-            <div className="text-[10px] text-stone-500 font-medium">Memnuniyet</div>
-            <div className="text-base font-bold text-stone-900 flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-              <span>4.95</span>
-              <span className="text-[10px] text-stone-400 font-normal">/ 5.0</span>
+          <button
+            type="button"
+            onClick={() => navigateTo('listings')}
+            className="text-center group cursor-pointer rounded-xl py-1 transition-colors"
+          >
+            <div className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white group-hover:text-[#E45424] transition-colors">
+              <AnimatedCounter value={stats.listingCount} />
+              <span className="text-[#E45424]">+</span>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              İlan
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigateTo('events')}
+            className="text-center group cursor-pointer rounded-xl py-1 transition-colors"
+          >
+            <div className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white group-hover:text-[#E45424] transition-colors">
+              <AnimatedCounter value={stats.eventCount} />
+              <span className="text-[#E45424]">+</span>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              Etkinlik
+            </div>
+          </button>
+
+          <div className="col-span-2 sm:col-span-1 text-center py-1">
+            <div
+              className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-[#E45424]"
+              title={`Ortalama ${stats.averageRating.toFixed(2)} / 5`}
+            >
+              <AnimatedCounter value={stats.satisfactionPercent} prefix="%" />
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              Memnuniyet
             </div>
           </div>
         </div>
